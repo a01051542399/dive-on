@@ -48,6 +48,15 @@ async function syncProfileFromUser(user: User) {
   } catch {}
 }
 
+/** Provider-specific scopes
+ *  Kakao: account_email/name 등은 비즈 앱 전환 필요. profile_nickname 만 요청
+ *  Google: 기본 스코프(email, profile, openid) 사용
+ */
+function scopesFor(provider: "kakao" | "google"): string | undefined {
+  if (provider === "kakao") return "profile_nickname";
+  return undefined;
+}
+
 /** Native OAuth: system browser + deep link + PKCE code exchange */
 async function handleNativeOAuth(provider: "kakao" | "google") {
   try {
@@ -56,6 +65,7 @@ async function handleNativeOAuth(provider: "kakao" | "google") {
       options: {
         redirectTo: "com.diveon.app://callback",
         skipBrowserRedirect: true,
+        scopes: scopesFor(provider),
       },
     });
     if (error || !data.url) return;
@@ -71,6 +81,7 @@ async function handleWebOAuth(provider: "kakao" | "google") {
     provider,
     options: {
       redirectTo: window.location.origin,
+      scopes: scopesFor(provider),
     },
   });
 }
