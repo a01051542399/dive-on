@@ -110,10 +110,11 @@ CREATE TABLE app_settings (
 -- ============================================================
 
 -- 신규 사용자 → profiles 자동 생성
-CREATE OR REPLACE FUNCTION handle_new_user()
+-- SECURITY DEFINER 함수는 search_path 가 비어 있어 스키마 한정 + SET search_path 둘 다 필요
+CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, name, email)
+  INSERT INTO public.profiles (id, name, email)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
@@ -121,7 +122,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
