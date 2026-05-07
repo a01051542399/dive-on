@@ -12,6 +12,7 @@ workflows:
       xcode: latest
       groups:
         - code_signing
+        - supabase
       vars:
         BUNDLE_ID: "com.diveon.app"
         APP_STORE_CONNECT_APP_ID: "6766769694"
