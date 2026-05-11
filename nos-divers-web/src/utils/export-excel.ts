@@ -102,10 +102,23 @@ export async function exportSettlementExcel(tour: Tour, settlements: Settlement[
     tour.participants.forEach((p) => {
       const isP = e.splitAmong.includes(p.id);
       const isPayer = e.paidBy === p.id;
-      if (isPayer && isP) row.push("O결제");
-      else if (isPayer && !isP) row.push("X결제");
-      else if (isP) row.push("O");
-      else row.push("X");
+      // splitType=custom 인 경우 splitAmounts 사용, 아니면 인원수로 균등 분할
+      let share = 0;
+      if (isP) {
+        if (e.splitType === "custom" && e.splitAmounts) {
+          share = (e.splitAmounts[String(p.id)] || 0) * rate;
+        } else {
+          share = perPerson;
+        }
+      }
+      if (isP) {
+        row.push(Math.round(share));
+      } else if (isPayer) {
+        // 결제만 한 경우 (분담 X) — 0 으로 표기하되 시각 구분 (셀 스타일에서 처리)
+        row.push(0);
+      } else {
+        row.push(null);
+      }
     });
     rows.push(row);
   });
@@ -180,13 +193,34 @@ export async function exportSettlementExcel(tour: Tour, settlements: Settlement[
           cell.s.alignment = RIGHT;
           cell.s.numFmt = "#,##0";
         }
-        // O/X cells
+        // 분담 금액 셀 (col 7 이상): 1인 분담금 또는 빈 셀 / 결제만(0)
         if (C >= 7) {
-          const val = String(cell.v);
-          if (val === "O결제") { cell.s.fill = BLUE_BG; cell.s.font = WHITE_FONT; }
-          else if (val === "X결제") { cell.s.fill = ORANGE_BG; cell.s.font = WHITE_FONT; }
-          else if (val === "O") { cell.s.fill = GREEN_BG; cell.s.font = GREEN_DARK; }
-          else if (val === "X") { cell.s.fill = RED_BG; cell.s.font = RED_DARK; }
+          const e = tour.expenses[R - dataStartRow];
+          const partIdx = C - 7;
+          const p = tour.participants[partIdx];
+          if (e && p) {
+            const isP = e.splitAmong.includes(p.id);
+            const isPayer = e.paidBy === p.id;
+            cell.s.alignment = RIGHT;
+            cell.s.numFmt = "#,##0";
+            if (isP && isPayer) {
+              // 결제자 + 분담: 파란색 강조
+              cell.s.fill = BLUE_BG; cell.s.font = WHITE_FONT;
+            } else if (isP) {
+              // 분담만: 옅은 녹색
+              cell.s.fill = GREEN_BG; cell.s.font = GREEN_DARK;
+            } else if (isPayer) {
+              // 결제만 (분담 X): 주황색, 값은 0
+              cell.s.fill = ORANGE_BG; cell.s.font = WHITE_FONT;
+              cell.s.alignment = CENTER;
+              cell.s.numFmt = '"결제만"';
+            } else {
+              // 비참여: 회색 대시
+              cell.s.fill = RED_BG; cell.s.font = RED_DARK;
+              cell.s.alignment = CENTER;
+              cell.v = "—";
+            }
+          }
         }
         // Zebra stripe for odd rows
         if ((R - dataStartRow) % 2 === 1 && C < 7) {

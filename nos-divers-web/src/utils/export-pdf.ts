@@ -45,12 +45,30 @@ export async function exportSettlementPDF(tour: Tour, settlements: Settlement[])
     const cells = tour.participants.map((p) => {
       const isParticipant = e.splitAmong.includes(p.id);
       const isPayer = e.paidBy === p.id;
+      // 분담금 계산 (custom 이면 splitAmounts, 아니면 균등)
+      let share = 0;
+      if (isParticipant) {
+        if (e.splitType === "custom" && e.splitAmounts) {
+          share = (e.splitAmounts[String(p.id)] || 0) * rate;
+        } else {
+          share = perPerson;
+        }
+      }
       let mark: string;
       let cls: string;
-      if (isPayer && isParticipant) { mark = "O결제"; cls = "o-paid"; }
-      else if (isPayer && !isParticipant) { mark = "X결제"; cls = "x-paid"; }
-      else if (isParticipant) { mark = "O"; cls = "o-mark"; }
-      else { mark = "X"; cls = "x-mark"; }
+      if (isPayer && isParticipant) {
+        mark = fmt(Math.round(share));
+        cls = "o-paid";
+      } else if (isPayer && !isParticipant) {
+        mark = "결제만";
+        cls = "x-paid";
+      } else if (isParticipant) {
+        mark = fmt(Math.round(share));
+        cls = "o-mark";
+      } else {
+        mark = "—";
+        cls = "x-mark";
+      }
       return `<td class="${cls}">${mark}</td>`;
     });
 
@@ -115,11 +133,11 @@ export async function exportSettlementPDF(tour: Tour, settlements: Settlement[])
   th { background: #0077B6; color: white; font-weight: 600; }
   th.name-col { min-width: ${nameColW}px; }
 
-  /* O/X cell styles */
-  .o-mark { background: #E8F5E9; color: #2E7D32; font-weight: 600; }
-  .x-mark { background: #FFEBEE; color: #C62828; }
-  .o-paid { background: #1565C0; color: #fff; font-weight: 700; }
-  .x-paid { background: #FF8A65; color: #fff; font-weight: 700; }
+  /* 분담 금액 셀 (1인 분담금) */
+  .o-mark { background: #E8F5E9; color: #2E7D32; font-weight: 600; text-align: right; }
+  .x-mark { background: #FFEBEE; color: #C62828; text-align: center; }
+  .o-paid { background: #1565C0; color: #fff; font-weight: 700; text-align: right; }
+  .x-paid { background: #FF8A65; color: #fff; font-weight: 700; text-align: center; font-size: ${Math.max(7, fontSize - 1)}px; }
 
   .num { text-align: center; }
   .desc { text-align: left; white-space: normal; word-break: break-all; }
