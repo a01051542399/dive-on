@@ -9,6 +9,14 @@ dist/
 Thumbs.db
 .claude/
 
+# Code signing secrets - NEVER commit
+*.pem
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+ios_cert_*
+
 # Build artifacts
 *.aab
 *.ipa
