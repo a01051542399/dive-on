@@ -17,6 +17,11 @@ CREATE TABLE profiles (
   birth_date TEXT,
   diving_level TEXT,
   emergency_contact TEXT,
+  -- OAuth(구글/카카오)는 가입과 동시에 trigger 가 프로필을 만들지만,
+  -- 사용자가 ProfileSetupScreen 에서 추가 정보(전화/생년월일/다이빙레벨 등)를
+  -- 입력하고 저장한 시점에 true 로 마킹. App.tsx 가 이 값을 보고 첫 로그인 시
+  -- 강제로 프로필 확인 화면을 노출.
+  setup_completed BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

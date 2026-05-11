@@ -635,11 +635,12 @@ export interface UserProfile {
   birthDate?: string;
   divingLevel?: string;
   emergencyContact?: string;
+  setupCompleted?: boolean;
 }
 
 export async function getProfile(): Promise<UserProfile> {
   const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return { name: "", email: "", grade: "멤버" };
+  if (!user) return { name: "", email: "", grade: "멤버", setupCompleted: false };
 
   const { data } = await supabase
     .from("profiles")
@@ -647,7 +648,7 @@ export async function getProfile(): Promise<UserProfile> {
     .eq("id", user.id)
     .single();
 
-  if (!data) return { name: "", email: user.email || "", grade: "멤버" };
+  if (!data) return { name: "", email: user.email || "", grade: "멤버", setupCompleted: false };
 
   return {
     name: data.name || "",
@@ -657,6 +658,7 @@ export async function getProfile(): Promise<UserProfile> {
     birthDate: data.birth_date ?? undefined,
     divingLevel: data.diving_level ?? undefined,
     emergencyContact: data.emergency_contact ?? undefined,
+    setupCompleted: data.setup_completed === true,
   };
 }
 
@@ -675,6 +677,8 @@ export async function setProfile(profile: UserProfile): Promise<void> {
       birth_date: profile.birthDate || null,
       diving_level: profile.divingLevel || null,
       emergency_contact: profile.emergencyContact || null,
+      // setup_completed 가 명시적으로 설정된 경우에만 변경 (기본은 false 라 무심코 덮어쓰지 않음)
+      ...(profile.setupCompleted !== undefined ? { setup_completed: profile.setupCompleted } : {}),
     });
   if (error) throw error;
 }

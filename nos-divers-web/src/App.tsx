@@ -177,13 +177,13 @@ function AuthGate() {
         }
       } catch {}
 
-      // Check if profile has a name (신규 OAuth 사용자 감지)
+      // Check setup completion: 신규(특히 OAuth) 사용자는 ProfileSetupScreen 노출
       setCheckingProfile(true);
       try {
         const { getProfile } = await import("./lib/supabase-store");
         const profile = await getProfile();
         if (!cancelled) {
-          setProfileReady(!!profile.name?.trim());
+          setProfileReady(profile.setupCompleted === true);
           setCheckingProfile(false);
         }
       } catch {
@@ -225,14 +225,36 @@ function AuthGate() {
 
 /** 신규 사용자 프로필 초기 설정 화면 (OAuth 포함) */
 function ProfileSetupScreen({ onComplete }: { onComplete: () => void }) {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [divingLevel, setDivingLevel] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // OAuth/이메일 가입 시 채워진 기존 프로필 정보 로드 (이름/이메일 등 자동 입력)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getProfile } = await import("./lib/supabase-store");
+        const profile = await getProfile();
+        if (cancelled) return;
+        setName(profile.name || "");
+        setEmail(profile.email || user?.email || "");
+        setPhone(profile.phone || "");
+        setBirthDate(profile.birthDate || "");
+        setDivingLevel(profile.divingLevel || "");
+        setEmergencyContact(profile.emergencyContact || "");
+      } catch {
+        if (!cancelled) setEmail(user?.email || "");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
 
   const formatPhone = (v: string) => {
     const d = v.replace(/[^0-9]/g, "").slice(0, 11);
@@ -255,12 +277,13 @@ function ProfileSetupScreen({ onComplete }: { onComplete: () => void }) {
       const { setProfile } = await import("./lib/supabase-store");
       await setProfile({
         name: name.trim(),
-        email: "",
+        email: email || user?.email || "",
         grade: "멤버",
         phone: phone || undefined,
         birthDate: birthDate || undefined,
         divingLevel: divingLevel || undefined,
         emergencyContact: emergencyContact || undefined,
+        setupCompleted: true, // ProfileSetupScreen 완료 → 다음 로그인부터는 스킵
       });
       onComplete();
     } catch {
