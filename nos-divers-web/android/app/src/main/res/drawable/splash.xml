@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 단순 흰색 스플래시 배경 (Theme.SplashScreen 의 windowSplashScreenBackground 보조) -->
+<color xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#FFFFFF" />
