@@ -160,9 +160,11 @@ workflows:
           ./gradlew bundleRelease --no-daemon --stacktrace
 
     artifacts:
-      - nos-divers-web/android/app/build/outputs/**/*.aab
-      - nos-divers-web/android/app/build/outputs/**/*.apk
-      - nos-divers-web/android/app/build/outputs/**/mapping.txt
+      - nos-divers-web/android/app/build/outputs/bundle/release/*.aab
+      - nos-divers-web/android/app/build/outputs/apk/release/*.apk
+      - nos-divers-web/android/app/build/outputs/mapping/release/mapping.txt
+      - "**/*.aab"
+      - "**/*.apk"
 
     publishing:
       email:
