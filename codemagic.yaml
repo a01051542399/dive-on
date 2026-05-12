@@ -105,7 +105,8 @@ workflows:
     working_directory: nos-divers-web
     environment:
       node: 22
-      java: 17
+      # capacitor-android 가 Java 21 source release 요구
+      java: 21
       groups:
         - supabase
         - android_signing
