@@ -97,3 +97,79 @@ workflows:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
+
+  android-release:
+    name: Android Release (Capacitor)
+    max_build_duration: 60
+    instance_type: linux_x2
+    working_directory: nos-divers-web
+    environment:
+      node: 22
+      java: 17
+      groups:
+        - supabase
+        - android_signing
+      vars:
+        PACKAGE_NAME: "com.diveon.app"
+        KEYSTORE_PATH: $CM_BUILD_DIR/nos-divers-web/android/app/upload-keystore.jks
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install Node dependencies
+        script: |
+          npm ci
+
+      - name: Build web assets
+        script: |
+          npm run build
+
+      - name: Sync Capacitor Android
+        script: |
+          npx cap sync android
+
+      - name: Set up Android keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > "$KEYSTORE_PATH"
+          cat > android/keystore.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+          ls -la android/app/upload-keystore.jks
+
+      - name: Increment version code
+        script: |
+          # 매 빌드마다 versionCode 를 단조 증가 (Play Console 요구사항)
+          # CM_BUILD_NUMBER 는 Codemagic 빌드 인덱스 (앱 단위 단조 증가)
+          NEW_VC=${CM_BUILD_NUMBER:-1}
+          echo "Setting versionCode = $NEW_VC"
+          sed -i "s/versionCode [0-9]*/versionCode $NEW_VC/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
+
+      - name: Build AAB
+        script: |
+          cd android
+          ./gradlew bundleRelease
+
+    artifacts:
+      - nos-divers-web/android/app/build/outputs/**/*.aab
+      - nos-divers-web/android/app/build/outputs/**/*.apk
+      - nos-divers-web/android/app/build/outputs/**/mapping.txt
+
+    publishing:
+      email:
+        recipients:
+          - a01051542399@gmail.com
+        notify:
+          success: true
+          failure: true
+      # Play Console 자동 업로드는 Service Account 셋업 후 활성화:
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
