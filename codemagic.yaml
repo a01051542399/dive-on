@@ -155,7 +155,8 @@ workflows:
       - name: Build AAB
         script: |
           cd android
-          ./gradlew bundleRelease
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon --stacktrace
 
     artifacts:
       - nos-divers-web/android/app/build/outputs/**/*.aab
