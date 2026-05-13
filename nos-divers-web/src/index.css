@@ -517,10 +517,12 @@ input, textarea {
   background: var(--surface);
   border-radius: 20px 20px 0 0;
   padding: 24px;
-  padding-bottom: max(40px, env(safe-area-inset-bottom, 40px));
+  /* 홈 인디케이터/제스처 바 보호 + 최소 40px. */
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
-  max-height: 85vh;
+  /* Dynamic Island/노치 위쪽 50px 여백 + safe-area 만큼 빼서 컨텐츠가 화면 끝에 닿지 않게. */
+  max-height: calc(100vh - 50px - env(safe-area-inset-top));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   transition: background-color 0.3s;

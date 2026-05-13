@@ -5,6 +5,7 @@ import * as db from "../lib/supabase-store";
 import { formatCurrency } from "../store";
 import { useTours, useUnreadAnnouncementCount } from "../hooks/useSupabase";
 import { getTheme } from "../theme";
+import { Modal } from "../components/Modal";
 
 interface Props {
   navigate: (r: Route) => void;
@@ -209,10 +210,8 @@ export function TourListScreen({ navigate }: Props) {
       </div>
 
       {/* Create Tour Modal */}
-      {showCreate && (
-        <div className="modal-overlay" onClick={() => setShowCreate(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title">새 투어 만들기</div>
+      <Modal open={showCreate} onClose={() => setShowCreate(false)}>
+        <div className="modal-title">새 투어 만들기</div>
 
             {/* Name (required) */}
             <div className="input-group">
@@ -310,17 +309,14 @@ export function TourListScreen({ navigate }: Props) {
                 만들기
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Delete Tour Modal */}
       {deleteTarget !== null && (() => {
         const targetTour = tours.find((t) => t.id === deleteTarget);
         if (!targetTour) return null;
         return (
-          <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <Modal open onClose={() => setDeleteTarget(null)}>
               <div className="modal-title" style={{ color: "var(--error)" }}>투어 삭제</div>
 
               <div style={{
@@ -385,8 +381,7 @@ export function TourListScreen({ navigate }: Props) {
                   삭제
                 </button>
               </div>
-            </div>
-          </div>
+          </Modal>
         );
       })()}
 

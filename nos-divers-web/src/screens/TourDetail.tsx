@@ -8,6 +8,7 @@ import type { Tour } from "../types";
 import { CommentTab } from "../components/CommentTab";
 import { exportSettlementPDF } from "../utils/export-pdf";
 import { exportSettlementExcel } from "../utils/export-excel";
+import { Modal } from "../components/Modal";
 
 interface Props {
   tourId: number;
@@ -808,10 +809,11 @@ export function TourDetailScreen({ tourId, navigate }: Props) {
       </div>
 
       {/* Expense Form Modal */}
-      {showExpenseForm && (
-        <div className="modal-overlay" onClick={() => { setShowExpenseForm(false); setEditingExpenseId(null); }}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
-            <div className="modal-title">{editingExpenseId !== null ? "비용 수정" : "비용 추가"}</div>
+      <Modal
+        open={showExpenseForm}
+        onClose={() => { setShowExpenseForm(false); setEditingExpenseId(null); }}
+      >
+          <div className="modal-title">{editingExpenseId !== null ? "비용 수정" : "비용 추가"}</div>
 
             <div style={{ flex: 1, overflowY: "auto" }}>
               <div className="input-group">
@@ -1133,36 +1135,13 @@ export function TourDetailScreen({ tourId, navigate }: Props) {
                 {editingExpenseId !== null ? "수정 완료" : "비용 추가"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Receipt View Modal */}
-      {viewingReceipt && (
-        <div className="modal-overlay modal-center" onClick={() => setViewingReceipt(null)}
-          style={{ background: "rgba(0,0,0,0.85)" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{
-            position: "relative", maxWidth: "90vw", maxHeight: "90vh",
-          }}>
-            <img src={viewingReceipt} alt="영수증" style={{
-              maxWidth: "90vw", maxHeight: "85vh", borderRadius: 8,
-              objectFit: "contain",
-            }} />
-            <button onClick={() => setViewingReceipt(null)} style={{
-              position: "absolute", top: -12, right: -12,
-              background: "rgba(255,255,255,0.9)", color: "#333",
-              border: "none", borderRadius: "50%", width: 32, height: 32,
-              fontSize: 18, cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", fontWeight: 700,
-            }}>✕</button>
-          </div>
-        </div>
-      )}
+      <ReceiptViewerModal src={viewingReceipt} onClose={() => setViewingReceipt(null)} />
 
       {/* PIN Modal */}
-      {showPinModal && (
-        <div className="modal-overlay modal-center" onClick={() => setShowPinModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <Modal open={showPinModal} center onClose={() => setShowPinModal(false)}>
             <div className="modal-title" style={{ textAlign: "center" }}>PIN 입력</div>
             <input
               className="pin-input"
@@ -1177,9 +1156,31 @@ export function TourDetailScreen({ tourId, navigate }: Props) {
               <button className="btn btn-secondary" onClick={() => setShowPinModal(false)}>취소</button>
               <button className="btn btn-primary" onClick={verifyPin}>확인</button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </>
+  );
+}
+
+/** 영수증 이미지를 화면 전체에 띄우는 뷰어. 일반 Modal 의 modal-content 박스 스타일을 쓰지 않으므로 별도 컴포넌트. */
+function ReceiptViewerModal({ src, onClose }: { src: string | undefined | null; onClose: () => void }) {
+  if (!src) return null;
+  return (
+    <Modal open center onClose={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        position: "relative", maxWidth: "90vw", maxHeight: "85vh",
+      }}>
+        <img src={src} alt="영수증" style={{
+          maxWidth: "90vw", maxHeight: "75vh", borderRadius: 8,
+          objectFit: "contain",
+        }} />
+        <button onClick={onClose} style={{
+          position: "absolute", top: -12, right: -12,
+          background: "rgba(255,255,255,0.9)", color: "#333",
+          border: "none", borderRadius: "50%", width: 32, height: 32,
+          fontSize: 18, cursor: "pointer", display: "flex",
+          alignItems: "center", justifyContent: "center", fontWeight: 700,
+        }}>✕</button>
+      </div>
+    </Modal>
   );
 }

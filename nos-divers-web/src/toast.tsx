@@ -1,4 +1,5 @@
 import { useState, useCallback, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 
 type ToastType = "info" | "success" | "error" | "warning";
 
@@ -59,15 +60,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     warning: "var(--warning)",
   };
 
-  return (
-    <ToastContext.Provider value={{ toast, confirm }}>
-      {children}
-
+  // iOS WebKit 의 -webkit-overflow-scrolling 부모 영향을 피하기 위해
+  // 토스트/컨펌은 document.body 에 portal 로 렌더한다.
+  const overlays = (
+    <>
       {/* Toast Container */}
       <div
         style={{
           position: "fixed",
-          top: 16,
+          top: "max(16px, calc(env(safe-area-inset-top) + 8px))",
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 9999,
@@ -112,6 +113,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            padding: 24,
           }}
         >
           <div
@@ -119,7 +121,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               background: "var(--surface)",
               borderRadius: 16,
               padding: 24,
-              width: 300,
+              width: "100%",
+              maxWidth: 300,
               textAlign: "center",
             }}
           >
@@ -158,6 +161,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+    </>
+  );
+
+  return (
+    <ToastContext.Provider value={{ toast, confirm }}>
+      {children}
+      {typeof document !== "undefined" && createPortal(overlays, document.body)}
     </ToastContext.Provider>
   );
 }

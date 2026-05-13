@@ -5,6 +5,7 @@ import { useToast } from "../toast";
 import * as db from "../lib/supabase-store";
 import { HEALTH_CHECKLIST } from "../waiver-template";
 import { exportWaiverPDF, exportAllWaiversPDF } from "../utils/export-waiver-pdf";
+import { Modal } from "../components/Modal";
 
 interface Props {
   tourId: number;
@@ -182,12 +183,8 @@ export function WaiverViewScreen({ tourId, navigate }: Props) {
       </div>
 
       {/* Detail Modal */}
-      {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Modal open={!!selected} onClose={() => setSelected(null)}>
+          {selected && <>
             {/* Modal header */}
             <div
               className="flex-row"
@@ -360,9 +357,8 @@ export function WaiverViewScreen({ tourId, navigate }: Props) {
                 </>
               );
             })()}
-          </div>
-        </div>
-      )}
+          </>}
+      </Modal>
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Modal } from "./Modal";
 
 const ADMIN_PIN = "2399";
 
@@ -48,11 +49,9 @@ export function PinModal({
     }
   };
 
-  if (!visible) return null;
-
   return (
-    <div className="modal-overlay modal-center" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="modal-content" style={{ textAlign: "center", position: "relative" }}>
+    <Modal open={visible} center onClose={onCancel}>
+      <div style={{ textAlign: "center", position: "relative" }}>
         {/* Lock icon */}
         <div style={{
           width: 56, height: 56, borderRadius: 28,
@@ -132,6 +131,6 @@ export function PinModal({
           }
         `}</style>
       </div>
-    </div>
+    </Modal>
   );
 }
