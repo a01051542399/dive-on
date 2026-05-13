@@ -196,9 +196,10 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* Android 의 일부 WebView 는 env() 가 0을 반환하므로 max() 로 안전 최솟값 보장.
-     상태바 28px (Android 표준), 좌우 인셋은 일반적으로 0이므로 폴백 불필요. */
-  padding-top: max(env(safe-area-inset-top), 28px);
+  /* iOS Dynamic Island/Notch 와 콘텐츠 사이에 여백 확보.
+     safe-area-inset-top 만 쓰면 상태바 바로 아래에 콘텐츠가 붙어 답답함.
+     env() + 12px 을 기본으로 하되 env() 가 0 인 Android WebView 에서는 40px 사용. */
+  padding-top: max(calc(env(safe-area-inset-top) + 12px), 40px);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
