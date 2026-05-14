@@ -167,6 +167,9 @@ html {
   height: 100%;
   overflow: hidden;
   background: var(--html-bg, #B8D8E8);
+  /* iOS WKWebView 의 rubber-band overscroll 차단 (DisallowOverscroll 보완) */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 html, body {
@@ -180,9 +183,17 @@ body {
   margin: 0 auto;
   height: 100%;
   overflow: hidden;
-  position: relative;
+  position: fixed;       /* iOS 에서 body 가 끌려가는 현상 차단 */
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
   -webkit-font-smoothing: antialiased;
   background-color: var(--background);
+  overscroll-behavior: none;
+  /* 손가락이 좌우로 움직일 때 페이지 전체가 끌려가는 것 차단.
+     세로 스크롤은 .page/.modal-content 내부에서 처리 */
+  touch-action: pan-y;
 }
 
 /* Scrollbar */
@@ -256,6 +267,8 @@ input, textarea {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* 페이지 끝에서 부모(body)로 스크롤 체인 전파 차단 → rubber-band 방지 */
+  overscroll-behavior: contain;
   /* 탭바(72px) + 안전영역(또는 폴백 16px) 만큼 콘텐츠 하단 여백. */
   padding-bottom: calc(72px + max(env(safe-area-inset-bottom), 16px));
 }
